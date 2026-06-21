@@ -666,29 +666,3 @@ footer {
     .timeline-dot { left: 20px; }
     .spec-grid { grid-template-columns: 1fr; }
 }
-
-/* === Emoji-free icon system (monogram badges + initials avatars) === */
-.ito-mark{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:84px;height:84px;border-radius:18px;
-  background:linear-gradient(150deg,#1c3050 0%,#0e1f33 100%);
-  color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  font-weight:900;font-size:1.85rem;line-height:1;letter-spacing:1px;
-  position:relative;box-shadow:0 12px 30px rgba(10,25,41,.28);
-  border:1px solid rgba(255,255,255,.18);
-}
-.ito-mark::after{content:'';position:absolute;left:18px;right:18px;bottom:0;height:3px;background:var(--red);border-radius:3px;}
-.ito-mark--lg{width:108px;height:108px;border-radius:22px;font-size:2.5rem;}
-.ito-initials{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  font-weight:900;font-size:3.4rem;letter-spacing:2px;color:#fff;opacity:.92;
-  position:relative;z-index:1;
-}
-.ito-mail{width:18px;height:18px;vertical-align:-3px;margin-right:8px;}
-
-
-/* minimal line icons inside badges + avatars */
-.ito-mark svg{width:40px;height:40px;}
-.ito-mark--lg svg{width:54px;height:54px;}
-.ito-person{display:inline-flex;align-items:center;justify-content:center;color:#fff;opacity:.9;position:relative;z-index:1;}
-.ito-person svg{width:104px;height:104px;}
