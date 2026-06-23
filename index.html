@@ -108,23 +108,34 @@
     <section id="home" class="hero" style="position: relative; overflow: hidden;">
 
     <!-- ARKA PLAN GÖRSEL -->
+    <img src="images/arac.jpeg" alt="" style="
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        object-fit: cover;
+        object-position: center center;
+        opacity: 0.35;
+        z-index: 0;
+    ">
+    <!-- KARANLIK OVERLAY -->
     <div style="
         position: absolute;
         inset: 0;
-        background: url('images/golet.jpeg') center/cover no-repeat;
-        opacity: 0.1;
+        background: rgba(5, 15, 30, 0.6);
         z-index: 0;
     "></div>
 
     <!-- ÖN İÇERİK -->
     <div class="hero-content" style="position: relative; z-index: 1;">
 
-        <img 
+        <img
             src="images/ituas-logo.png"
             alt="ITUAS Logo"
             style="
                 width: 180px;
-                margin-bottom: -25px;
+                margin-bottom: 20px;
             "
         >
 

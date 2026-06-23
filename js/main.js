@@ -50,12 +50,23 @@ function animateCounters() {
     });
 }
 
-// Sayfa yüklendiğinde animasyonları başlat
-// Not: 'load' eventi tüm görsellerin (hero arka planı vb.) yüklenmesini bekler;
-// büyük/yavaş görsellerde bu gecikip sayaçların 0'da kalması gibi görünebiliyordu.
-// DOMContentLoaded, HTML ayrıştırılır ayrıştırılmaz tetiklenir, daha güvenilir.
+// Sayaçlar stats bölümü görünür olduğunda başlasın
 document.addEventListener('DOMContentLoaded', () => {
-    animateCounters();
+    const statsSection = document.querySelector('.stats');
+    if (!statsSection) return;
+
+    let started = false;
+    const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !started) {
+                started = true;
+                animateCounters();
+                statsObserver.disconnect();
+            }
+        });
+    }, { threshold: 0.3 });
+
+    statsObserver.observe(statsSection);
 });
 
 // Intersection Observer ile animasyonlar
