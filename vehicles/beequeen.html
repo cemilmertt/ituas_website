@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BeeQueen - ITUAS</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .model-viewer-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 3rem auto;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--dark-blue) 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .model-viewer-header { text-align: center; color: var(--white); margin-bottom: 1.5rem; }
+        .model-viewer-header h3 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .model-viewer-header p { color: rgba(255,255,255,0.7); font-size: 1rem; }
+        #model-canvas { width: 100%; height: 500px; border-radius: 15px; background: radial-gradient(circle at 50% 50%, rgba(33,150,243,0.1) 0%, transparent 70%); cursor: grab; display: block; }
+        #model-canvas:active { cursor: grabbing; }
+        .model-controls { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .control-btn { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); color: var(--white); padding: 0.8rem 1.5rem; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; font-size: 0.9rem; }
+        .control-btn:hover { background: rgba(255,23,68,0.3); border-color: var(--red); transform: translateY(-2px); }
+        .loading-indicator { text-align: center; color: var(--white); padding: 3rem; font-size: 1.2rem; }
+        .loading-spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--red); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 1rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .model-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+        .model-info-item { background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .model-info-item strong { display: block; color: var(--red); font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .model-info-item span { color: var(--white); font-size: 1.1rem; }
+    </style>
 </head>
 <body>
     <nav class="navbar scrolled">
@@ -26,6 +52,29 @@
     </div>
 
     <div class="detail-content">
+        <!-- 3D MODEL VIEWER -->
+        <div class="model-viewer-container">
+            <div class="model-viewer-header">
+                <h3>🚤 3D Model Görüntüleyici</h3>
+                <p>Fareyle sürükleyerek döndürün, tekerlek ile yakınlaştırın/uzaklaştırın</p>
+            </div>
+            <div id="loading" class="loading-indicator">
+                <div class="loading-spinner"></div>
+                <p>3D Model yükleniyor...</p>
+            </div>
+            <canvas id="model-canvas" style="display: none;"></canvas>
+            <div class="model-controls">
+                <button class="control-btn" onclick="resetCamera()">🔄 Görünümü Sıfırla</button>
+                <button class="control-btn" onclick="toggleAutoRotate()">🔁 Otomatik Döndür</button>
+                <button class="control-btn" onclick="toggleWireframe()">🔲 Tel Kafes</button>
+            </div>
+            <div class="model-info">
+                <div class="model-info-item"><strong>Format</strong><span>GLB</span></div>
+                <div class="model-info-item"><strong>Render</strong><span>WebGL</span></div>
+                <div class="model-info-item"><strong>Etkileşim</strong><span>360° Döndürme</span></div>
+            </div>
+        </div>
+
         <h2>Genel Bakış</h2>
         <p>BeeQueen, yüksek stabiliteye sahip katamaran yapıda bir insansız su üstü aracıdır. Savunma sanayi, ticari, lojistik ve araştırma alanlarında kullanım için tasarlanmıştır. Tamamı ITUAS öğrencileri tarafından tasarlanıp üretilen BeeQueen, yerli mühendislik kabiliyetinin ve teknik yetkinliğin bir göstergesidir. Hız, dayanıklılık ve çok yönlülük açısından optimize edilen bu platform, profesyonel denizcilik uygulamaları için ideal bir çözüm sunar.</p>
 
@@ -154,6 +203,106 @@
         </div>
     </footer>
 
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+let scene, camera, renderer, model;
+let autoRotate = false;
+let wireframeMode = false;
+
+function init3DViewer() {
+    const canvas = document.getElementById('model-canvas');
+    const loadingDiv = document.getElementById('loading');
+    const container = canvas.parentElement;
+
+    scene = new THREE.Scene();
+    scene.background = null;
+
+    camera = new THREE.PerspectiveCamera(45, container.clientWidth / 500, 0.1, 1000);
+
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, 500);
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(5, 5, 5);
+    scene.add(dirLight);
+
+    const loader = new GLTFLoader();
+    loader.load(
+        '../models/beequeen.glb',
+        (gltf) => {
+            loadingDiv.style.display = 'none';
+            canvas.style.display = 'block';
+            model = gltf.scene;
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            const scale = 2 / Math.max(size.x, size.y, size.z);
+            model.scale.setScalar(scale);
+            model.position.sub(center.multiplyScalar(scale));
+            scene.add(model);
+            camera.position.set(0, 1.5, 4);
+            camera.lookAt(0, 0, 0);
+        },
+        (xhr) => {
+            const p = Math.round((xhr.loaded / xhr.total) * 100);
+            loadingDiv.querySelector('p').textContent = `3D Model yükleniyor... ${p}%`;
+        },
+        (error) => {
+            console.error(error);
+            loadingDiv.innerHTML = '<p style="color:#ffa726">Model yüklenemedi</p>';
+        }
+    );
+
+    let dragging = false, lastX = 0, lastY = 0;
+    canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+    canvas.addEventListener('mousemove', e => {
+        if (!dragging || !model) return;
+        model.rotation.y += (e.clientX - lastX) * 0.01;
+        model.rotation.x += (e.clientY - lastY) * 0.01;
+        lastX = e.clientX; lastY = e.clientY;
+    });
+    canvas.addEventListener('mouseup', () => dragging = false);
+    canvas.addEventListener('mouseleave', () => dragging = false);
+    canvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        camera.position.z = Math.min(Math.max(camera.position.z + e.deltaY * 0.002, 2), 10);
+    });
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / 500;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, 500);
+    });
+    animate();
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    if (autoRotate && model) model.rotation.y += 0.005;
+    renderer.render(scene, camera);
+}
+
+window.resetCamera = () => { camera.position.set(0, 1.5, 4); camera.lookAt(0, 0, 0); if (model) model.rotation.set(0, 0, 0); };
+window.toggleAutoRotate = () => autoRotate = !autoRotate;
+window.toggleWireframe = () => {
+    wireframeMode = !wireframeMode;
+    if (!model) return;
+    model.traverse(c => { if (c.isMesh) c.material.wireframe = wireframeMode; });
+};
+
+window.addEventListener('load', init3DViewer);
+    </script>
     <script src="../js/main.js"></script>
 </body>
 </html>
