@@ -27,8 +27,8 @@ function animateCounters() {
     const counters = [
         { id: 'count1', target: 9 },
         { id: 'count2', target: 4 },
-        { id: 'count3', target: 6 },
-        { id: 'count4', target: 30 },
+        { id: 'count3', target: 5 },
+        { id: 'count4', target: 25 },
         { id: 'count5', target: 4 }
     ];
 
